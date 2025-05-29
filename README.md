@@ -1,3 +1,3 @@
 Don't forget to install:
-request
+requests
 PyQt5
