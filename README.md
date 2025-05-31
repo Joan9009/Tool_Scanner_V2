@@ -8,7 +8,7 @@
     - cd Tool_Scanner_V2
 - Crea y activa un entorno virtual:
     - python3 -m venv venv_scanner
-    - source venv/bin/activate
+    - source venv_ scanner/bin/activate
 
 # Uso
 - Inicia la herramienta de escaneo en la terminal:
