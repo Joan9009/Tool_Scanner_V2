@@ -1,27 +1,21 @@
 import requests
 import sys
 
-# Colores ANSI
-RESET = "\033[0m"
-YELLOW = "\033[93m"
-RED = "\033[91m"
-BLUE = "\033[94m"
-MAGENTA = "\033[95m"
 GRAY = "\033[90m"
-GREEN = "\033[92m"
+RESET = "\032[91m"
 
 def scan_wordpress(base_url, paths_file='payloads/wordpress.txt', output_func=print):
     def out(msg):
         output_func(msg)
         sys.stdout.flush()
 
-    out(f"\n{MAGENTA}--- Escaneo de Vulnerabilidades WordPress ---{RESET}\n")
+    out(f"\n--- Escaneo de Vulnerabilidades WordPress ---\n")
 
     try:
         with open(paths_file, 'r') as file:
             paths = file.read().splitlines()
     except FileNotFoundError:
-        out(f"{RED}[ERROR] Archivo de rutas no encontrado: {paths_file}{RESET}")
+        out(f"[ERROR] Archivo de rutas no encontrado: {paths_file}")
         return
 
     for path in paths:
@@ -32,32 +26,32 @@ def scan_wordpress(base_url, paths_file='payloads/wordpress.txt', output_func=pr
 
             if status == 200:
                 if 'wp-json' in full_url:
-                    out(f"{YELLOW}[!] {full_url}{RESET}")
-                    out(f"{YELLOW}[!] API REST habilitada - Posible enumeración de usuarios.{RESET}")
+                    out(f"[!] {full_url}")
+                    out(f"[!] API REST habilitada - Posible enumeración de usuarios.")
                 elif 'wp-content/plugins' in full_url:
-                    out(f"{YELLOW}[!] {full_url}{RESET}")
-                    out(f"{YELLOW}[!] Plugins visibles - Riesgo de enumeración.{RESET}")
+                    out(f"[!] {full_url}")
+                    out(f"[!] Plugins visibles - Riesgo de enumeración.")
                 elif 'wp-config.php.bak' in full_url:
-                    out(f"{RED}[!] {full_url}{RESET}")
-                    out(f"{RED}[!] Archivo de configuración de respaldo accesible - ¡ALTO RIESGO!{RESET}")
+                    out(f"[!] {full_url}")
+                    out(f"[!] Archivo de configuración de respaldo accesible - ¡ALTO RIESGO!")
                 else:
-                    out(f"{YELLOW}[!] Posible hallazgo en: {full_url}{RESET}")
+                    out(f"[!] Posible hallazgo en: {full_url}")
 
             elif status == 403:
-                out(f"{RED}[-] Acceso prohibido: {full_url}{RESET}")
+                out(f"[-] Acceso prohibido: {full_url}")
             elif status == 405:
-                out(f"{RED}[!] Método no permitido en: {full_url}{RESET}")
+                out(f"[!] Método no permitido en: {full_url}")
             elif status == 500:
-                out(f"{MAGENTA}[!] Error del servidor en: {full_url}{RESET}")
+                out(f"[!] Error del servidor en: {full_url}")
             elif status == 401:
-                out(f"{BLUE}[!] Requiere autenticación: {full_url}{RESET}")
+                out(f"[!] Requiere autenticación: {full_url}")
             elif status == 404:
-                out(f"{GRAY}[404] {full_url} - No encontrado (puede ser seguro o no expuesto){RESET}")
+                out(f"[404] {full_url} - No encontrado (puede ser seguro o no expuesto)")
             else:
                 out(f"[{status}] {full_url}")
 
         except requests.RequestException as e:
-            out(f"{RED}[ERROR] No se pudo conectar a {full_url} - {e}{RESET}")
+            out(f"[ERROR] No se pudo conectar a {full_url} - {e}")
 
     check_pingback(base_url, output_func=output_func)
 
@@ -80,12 +74,12 @@ def check_pingback(base_url, output_func=print):
     try:
         response = requests.post(url, data=payload, headers=headers, timeout=10)
         if "faultCode" in response.text and "33" in response.text:
-            out(f"{YELLOW}[!] Pingback habilitado - Puede ser usado para ataques DDoS (pingback.ping){RESET}")
+            out(f"[!] Pingback habilitado - Puede ser usado para ataques DDoS (pingback.ping)")
         elif response.status_code == 405:
-            out(f"{BLUE}[-] Pingback deshabilitado - Método no permitido (405){RESET}")
+            out(f"[-] Pingback deshabilitado - Método no permitido (405)")
         elif "faultString" in response.text:
-            out(f"{BLUE}[-] Pingback parece estar deshabilitado - faultString detectado{RESET}")
+            out(f"[-] Pingback parece estar deshabilitado - faultString detectado")
         else:
-            out(f"{GREEN}[+] xmlrpc.php responde pero no se detectó pingback.ping activado{RESET}")
+            out(f"[+] xmlrpc.php responde pero no se detectó pingback.ping activado")
     except requests.RequestException as e:
-        out(f"{RED}[ERROR] No se pudo verificar pingback: {e}{RESET}")
+        out(f"[ERROR] No se pudo verificar pingback: {e}")
